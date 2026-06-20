@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(LbmLib "src/lbm.cpp")
+add_library(LbmLib "src/lbm.cpp" "src/simulate_run.cpp")
 
 target_include_directories(LbmLib PUBLIC "include/")
 

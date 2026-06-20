@@ -6,7 +6,8 @@
 
 struct Cell {
   float density;
-  Vect velocity;
+  Vect<float> velocity;
 
-  std::array<float, LATTICE_COUNT> pdf;
+  std::array<float, LATTICE_COUNT> pdf[2];
+  std::array<float, LATTICE_COUNT> pdf_eq[2];
 };
