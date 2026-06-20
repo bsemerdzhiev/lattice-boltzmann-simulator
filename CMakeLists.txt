@@ -11,8 +11,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(LbmLib "src/lbm.cpp" "src/simulate_run.cpp")
 
+find_package(OpenGL REQUIRED)
+find_package(glfw3 REQUIRED)
+
+add_library(glad STATIC "frameworks/glad/src/glad.c")
+target_include_directories(glad PUBLIC "frameworks/glad/include")
+
 target_include_directories(LbmLib PUBLIC "include/")
 
 add_executable(LBMSim "src/main.cpp")
 
-target_link_libraries(LBMSim PRIVATE LbmLib)
+target_link_libraries(LBMSim PRIVATE LbmLib glfw glad OpenGL::GL)

@@ -21,7 +21,13 @@ constexpr std::array<Vect<int32_t>, LATTICE_COUNT> DISC_VELOCITY_INT = {
     Vect{-1, 1}, Vect{0, 1},   Vect{+1, 1}, Vect{0, 0},
 };
 
-extern std::array<std::array<Cell, HEIGHT>, WIDTH> lattice;
+constexpr Vect<float> U_wall{U_lid, 0};
+
+template <typename T> using Lattice = std::array<std::array<T, WIDTH>, HEIGHT>;
+
+extern Lattice<Cell> lattice;
+extern Lattice<bool> blockade;
+extern Lattice<Vect<float>> forces;
 
 void initialize();
 

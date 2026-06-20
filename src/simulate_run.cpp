@@ -1,12 +1,10 @@
 #include "simulate_run.hpp"
+#include "GLFW/glfw3.h"
 #include "lbm.hpp"
 
-void SimulateRun::run() {
-  LBM::initialize();
+int32_t k = 1;
 
-  int32_t k = 1;
-  while (true) {
-    LBM::update(k);
-    k ^= 1;
-  }
+void SimulateRun::run() {
+  LBM::update(k);
+  k ^= 1;
 }
