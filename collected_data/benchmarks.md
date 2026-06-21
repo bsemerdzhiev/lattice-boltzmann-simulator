@@ -1,0 +1,113 @@
+--------------------------------------------------------------------------------
+Sequential runs:
+6'000 steps - 4'203ms
+50'000 steps - 36'616ms
+100'000 steps - 71'630ms
+
+Simulation started
+CPU time passed: 76927.375ms
+
+ Performance counter stats for './LBMSim':
+
+    76,490,618,357      task-clock                       #    0.994 CPUs utilized
+             4,232      context-switches                 #   55.327 /sec
+                 1      cpu-migrations                   #    0.013 /sec
+             1,282      page-faults                      #   16.760 /sec
+   554,540,041,494      instructions                     #    1.74  insn per cycle
+   318,868,060,124      cycles                           #    4.169 GHz
+    25,583,360,972      branches                         #  334.464 M/sec
+        26,157,236      branch-misses                    #    0.10% of all branches
+ #     32.7 %  tma_backend_bound
+                                                  #     56.2 %  tma_bad_speculation
+                                                  #      0.1 %  tma_frontend_bound
+                                                  #     10.9 %  tma_retiring
+
+      76.930698325 seconds time elapsed
+
+      76.442323000 seconds user
+       0.044983000 seconds sys
+
+--------------------------------------------------------------------------------
+After AOS
+
+100'000 steps - 33'944ms
+
+borislav@Borko:~/Documents/lbm-sim/build$ perf stat ./LBMSim
+Simulation started
+CPU time passed: 33944.137ms
+
+ Performance counter stats for './LBMSim':
+
+    33,927,868,342      task-clock                       #    0.999 CPUs utilized
+               574      context-switches                 #   16.918 /sec
+                 1      cpu-migrations                   #    0.029 /sec
+               711      page-faults                      #   20.956 /sec
+   478,841,214,032      instructions                     #    3.55  insn per cycle
+   134,719,093,844      cycles                           #    3.971 GHz
+    24,386,409,490      branches                         #  718.772 M/sec
+        24,974,004      branch-misses                    #    0.10% of all branches
+ #     19.8 %  tma_backend_bound
+                                                  #     13.3 %  tma_bad_speculation
+                                                  #      3.0 %  tma_frontend_bound
+                                                  #     63.9 %  tma_retiring
+
+      33.945722225 seconds time elapsed
+
+      33.925430000 seconds user
+       0.001999000 seconds sys
+
+--------------------------------------------------------------------------------
+After flattening the array
+
+100'000 steps - 40'991.16ms
+
+CPU time passed: 40991.16ms
+
+ Performance counter stats for './LBMSim':
+
+    40,893,579,331      task-clock                       #    0.998 CPUs utilized
+             5,111      context-switches                 #  124.983 /sec
+                 1      cpu-migrations                   #    0.024 /sec
+               710      page-faults                      #   17.362 /sec
+   518,850,811,542      instructions                     #    3.32  insn per cycle
+   156,067,109,841      cycles                           #    3.816 GHz
+    24,396,661,484      branches                         #  596.589 M/sec
+         7,605,368      branch-misses                    #    0.03% of all branches
+ #     15.9 %  tma_backend_bound
+                                                  #     53.1 %  tma_bad_speculation
+                                                  #      1.8 %  tma_frontend_bound
+                                                  #     29.1 %  tma_retiring
+
+      40.992905590 seconds time elapsed
+
+      40.843046000 seconds user
+       0.036924000 seconds sys
+--------------------------------------------------------------------------------
+After compiler vectorization
+
+100'000 steps - 33'944ms
+
+Simulation started
+CPU time passed: 29954.527ms
+
+ Performance counter stats for './LBMSim':
+
+    29,921,341,207      task-clock                       #    0.999 CPUs utilized
+             1,312      context-switches                 #   43.848 /sec
+                 3      cpu-migrations                   #    0.100 /sec
+               719      page-faults                      #   24.030 /sec
+   402,480,992,371      instructions                     #    3.37  insn per cycle
+   119,515,873,837      cycles                           #    3.994 GHz
+    36,577,142,374      branches                         #    1.222 G/sec
+        26,340,263      branch-misses                    #    0.07% of all branches
+ #     15.4 %  tma_backend_bound
+                                                  #     35.8 %  tma_bad_speculation
+                                                  #      2.8 %  tma_frontend_bound
+                                                  #     45.9 %  tma_retiring
+
+      29.956312792 seconds time elapsed
+
+      29.906979000 seconds user
+       0.010991000 seconds sys
+
+

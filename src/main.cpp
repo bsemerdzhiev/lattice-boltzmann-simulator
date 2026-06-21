@@ -1,4 +1,10 @@
+#include "benchmark_simulation.hpp"
+#include "render_simulation.hpp"
 #include <cstdint>
-#include <iostream>
 
-int32_t main() {}
+int32_t main() {
+  // RenderSimulation::render();
+  BenchmarkRun::run();
+
+  return 0;
+}

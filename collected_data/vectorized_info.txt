@@ -1,0 +1,65 @@
+[1/3] Building CXX object CMakeFiles/LbmLib.dir/src/lbm.cpp.o
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:48:28: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:48:28: missed: not vectorized: control flow in loop.
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:49:30: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:49:30: missed: not vectorized: control flow in loop.
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:21:28: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:39:24: missed: not vectorized: complicated access pattern.
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:22:30: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:7:6: missed: not vectorized: no vectype for stmt: rhs$x_314 = .MASK_LOAD (_399, 32, _398);
+ scalar_type: float
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:8:28: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:11:27: missed: not vectorized: complicated access pattern.
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:9:30: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:11:27: missed: not vectorized: no vectype for stmt: MEM <struct Lattice> [(value_type &)&density]._M_elems[i_124]._M_elems[j_98] = 1.0e+0;
+ scalar_type: float
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:38:31: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:38:31: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:38:31: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:153:28: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:171:9: missed: not vectorized: data ref analysis failed: retval.6_204 = .MASK_LOAD (_471, 8, _395);
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:154:30: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:161:36: missed: not vectorized: no vectype for stmt: _213 = .MASK_LOAD (_429, 32, _428);
+ scalar_type: float
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:146:28: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: missed: not vectorized: no vectype for stmt: _35 = MEM <struct Lattice[2]> [(value_type &)&pdf_eq][_488]._M_elems[i_907]._M_elems[0]._M_elems[0];
+ scalar_type: float
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:120:28: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:137:34: missed: not vectorized: complicated access pattern.
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:121:30: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:58:6: missed: not vectorized: no vectype for stmt: rhs$x_1067 = .MASK_LOAD (_1287, 32, _1286);
+ scalar_type: float
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:99:28: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:100:36: missed: not vectorized: no vectype for stmt: f2_141 = MEM <struct Lattice[2]> [(value_type &)&pdf][_488]._M_elems[i_869]._M_elems[0]._M_elems[2];
+ scalar_type: float
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:82:28: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:91:30: missed: not vectorized: data ref analysis failed: .MASK_STORE (_1438, 32B, _1432, _782);
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:83:30: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:88:28: missed: not vectorized: no vectype for stmt: .MASK_STORE (_1572, 32B, _1571, 0.0);
+ scalar_type: float
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:70:28: optimized: loop vectorized using 16 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:60:28: missed: couldn't vectorize loop
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:63:35: missed: not vectorized: complicated access pattern.
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:61:30: optimized: loop vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+/home/borislav/Documents/lbm-sim/src/lbm.cpp:147:27: optimized: basic block part vectorized using 32 byte vectors
+[2/3] Linking CXX static library libLbmLib.a
+[3/3] Linking CXX executable LBMSim
