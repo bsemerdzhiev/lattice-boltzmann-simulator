@@ -1,3 +1,4 @@
+#include "benchmark_simulation.hpp"
 #include "render_simulation.hpp"
 #include <cstdint>
 

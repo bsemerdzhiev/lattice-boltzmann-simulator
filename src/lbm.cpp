@@ -7,8 +7,8 @@ LBM::Lattice<Cell> LBM::lattice;
 LBM::Lattice<bool> LBM::blockade;
 
 void LBM::initialize() {
-  for (std::size_t i = 0; i < LBM_CONSTANTS::HEIGHT; i++) {
-    for (std::size_t j = 0; j < LBM_CONSTANTS::WIDTH; j++) {
+  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
       lattice[i][j].density = 1.00;
       lattice[i][j].velocity = LBM_CONSTANTS::HORIZONTAL_VELOCITY;
 
@@ -19,13 +19,13 @@ void LBM::initialize() {
   }
 
   // compute the equilibrium velocities
-  for (std::size_t i = 0; i < LBM_CONSTANTS::HEIGHT; i++) {
-    for (std::size_t j = 0; j < LBM_CONSTANTS::WIDTH; j++) {
+  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
       if (blockade[i][j]) {
         continue;
       }
       // calculate the equilibrium distribution
-      for (std::size_t z = 0; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
+      for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
         double velocity_q =
             (DISC_VELOCITY[z].dot_product(lattice[i][j].velocity));
 
@@ -47,8 +47,8 @@ void LBM::initialize() {
   Vect<double> circle_coord{LBM_CONSTANTS::WIDTH / 5.0,
                             LBM_CONSTANTS::HEIGHT / 2.0};
 
-  for (std::size_t i = 0; i < LBM_CONSTANTS::HEIGHT; i++) {
-    for (std::size_t j = 0; j < LBM_CONSTANTS::WIDTH; j++) {
+  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
       if (circle_coord.euclid_dist(Vect<double>{1.0 * j, 1.0 * i}) <
           LBM_CONSTANTS::CYLINDER_RADIUS) {
         blockade[i][j] = 1;
@@ -69,7 +69,7 @@ void LBM::update(bool k) {
   }
 
   // right boundary outlet
-  for (std::size_t i = 0; i < LBM_CONSTANTS::HEIGHT; i++) {
+  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
     // for the outlet, perform interpolation from the results of the
     // previous cell
     lattice[i][LBM_CONSTANTS::WIDTH - 1].pdf[k][3] =
@@ -81,14 +81,14 @@ void LBM::update(bool k) {
   }
 
   // compute the macroscopic density and velocity
-  for (std::size_t i = 0; i < LBM_CONSTANTS::HEIGHT; i++) {
-    for (std::size_t j = 0; j < LBM_CONSTANTS::WIDTH; j++) {
+  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
       if (blockade[i][j]) {
         continue;
       }
       lattice[i][j].density = 0.0;
       lattice[i][j].velocity = Vect{0.0, 0.0};
-      for (std::size_t z = 0; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
+      for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
         lattice[i][j].density += lattice[i][j].pdf[k][z];
         lattice[i][j].velocity =
             lattice[i][j].velocity + DISC_VELOCITY[z] * lattice[i][j].pdf[k][z];
@@ -119,13 +119,13 @@ void LBM::update(bool k) {
   }
 
   // compute the equilibrium velocities
-  for (std::size_t i = 0; i < LBM_CONSTANTS::HEIGHT; i++) {
-    for (std::size_t j = 0; j < LBM_CONSTANTS::WIDTH; j++) {
+  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
       if (blockade[i][j]) {
         continue;
       }
       // calculate the equilibrium distribution
-      for (std::size_t z = 0; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
+      for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
         double velocity_q =
             (DISC_VELOCITY[z].dot_product(lattice[i][j].velocity));
 
@@ -146,7 +146,7 @@ void LBM::update(bool k) {
 
   // apply Zou He boundary condition for the inlet flow
   // https://arxiv.org/abs/comp-gas/9611001
-  for (std::size_t i = 0; i < LBM_CONSTANTS::HEIGHT; i++) {
+  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
     lattice[i][0].pdf[k][0] = lattice[i][0].pdf_eq[k][0];
     lattice[i][0].pdf[k][1] = lattice[i][0].pdf_eq[k][1];
     lattice[i][0].pdf[k][7] = lattice[i][0].pdf_eq[k][7];
@@ -158,7 +158,7 @@ void LBM::update(bool k) {
       if (blockade[i][j]) {
         continue;
       }
-      for (std::size_t z = 0; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
+      for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
         // calculate collisions
         double relaxation_term =
             (lattice[i][j].pdf[k][z] - lattice[i][j].pdf_eq[k][z]) *

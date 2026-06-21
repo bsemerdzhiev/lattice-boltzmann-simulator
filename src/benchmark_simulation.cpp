@@ -6,7 +6,7 @@
 #include <iostream>
 #include <ratio>
 
-constexpr int32_t TIMESTEPS = 150;
+constexpr int32_t TIMESTEPS = 100'000;
 
 void BenchmarkRun::run() {
   std::cout << std::format("Simulation started\n");
