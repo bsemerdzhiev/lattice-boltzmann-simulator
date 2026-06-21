@@ -22,6 +22,7 @@ constexpr std::array<Vect<int32_t>, LATTICE_COUNT> DISC_VELOCITY_INT = {
 };
 
 constexpr Vect<float> U_wall{U_lid, 0};
+constexpr Vect<float> wanted_velocity{0.1f, 0.f};
 
 template <typename T> using Lattice = std::array<std::array<T, WIDTH>, HEIGHT>;
 

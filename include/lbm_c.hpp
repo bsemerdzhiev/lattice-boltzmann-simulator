@@ -2,7 +2,7 @@
 
 #include <cstdint>
 constexpr int32_t HEIGHT = 300;
-constexpr int32_t WIDTH = 1000;
+constexpr int32_t WIDTH = 600;
 
 constexpr int32_t LATTICE_COUNT = 9;
 

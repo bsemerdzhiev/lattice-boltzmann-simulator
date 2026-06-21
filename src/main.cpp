@@ -100,9 +100,16 @@ std::vector<unsigned char> compute_grid_colors() {
       // std::cout << t << " ";
 
       std::size_t idx = (i * WIDTH + j) * 3;
-      pixels[idx + 0] = static_cast<unsigned char>(255.f * t);         // R
-      pixels[idx + 1] = 0;                                             // G
-      pixels[idx + 2] = static_cast<unsigned char>(255.f * (1.f - t)); // B
+      if (LBM::blockade[i][j]) {
+        pixels[idx + 0] = 254; // static_cast<unsigned char>(255.f * t); // R
+        pixels[idx + 1] = 254; // G
+        pixels[idx + 2] =
+            0; // static_cast<unsigned char>(255.f * (1.f - t)); // B
+      } else {
+        pixels[idx + 0] = static_cast<unsigned char>(255.f * t);         // R
+        pixels[idx + 1] = 0;                                             // G
+        pixels[idx + 2] = static_cast<unsigned char>(255.f * (1.f - t)); // B
+      }
     }
     // std::cout << "\n";
   }
@@ -119,7 +126,7 @@ int32_t main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   const int WINDOW_WIDTH = 1000;
-  const int WINDOW_HEIGHT = 300;
+  const int WINDOW_HEIGHT = 450;
   GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT,
                                         "LBM Visualizer", nullptr, nullptr);
   if (window == nullptr) {

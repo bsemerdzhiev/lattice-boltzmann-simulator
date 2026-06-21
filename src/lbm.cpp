@@ -2,8 +2,6 @@
 #include "lbm_c.hpp"
 #include "math_util.hpp"
 #include <cstddef>
-#include <format>
-#include <iostream>
 
 LBM::Lattice<Cell> LBM::lattice;
 LBM::Lattice<bool> LBM::blockade;
@@ -27,23 +25,15 @@ void LBM::initialize() {
     blockade[0][i] = true;
     blockade[HEIGHT - 1][i] = true;
   }
-  for (std::size_t i = 0; i < HEIGHT; i++) {
-    blockade[i][0] = true;
-    blockade[i][WIDTH - 1] = true;
 
-    if (i >= HEIGHT / 4.f && i <= HEIGHT * 3.f / 4.f)
-      forces[i][1] = Vect{1.f, 0.f};
-  }
-
-  Vect<float> circle_coord{WIDTH / 10.f, HEIGHT / 2.f};
+  Vect<float> circle_coord{100, HEIGHT / 2.f};
 
   for (std::size_t i = 0; i < HEIGHT; i++) {
     for (std::size_t j = 0; j < WIDTH; j++) {
-      if (circle_coord.euclid_dist(Vect<float>{1.f * j, 1.f * i}) < 40) {
+      if (circle_coord.euclid_dist(Vect<float>{1.f * j, 1.f * i}) < 1000) {
         blockade[i][j] = 1;
       }
     }
-    // std::cout << "\n";
   }
 }
 
@@ -96,26 +86,49 @@ void LBM::update(bool k) {
         float relaxation_term =
             (lattice[i][j].pdf[k][z] - lattice[i][j].pdf_eq[k][z]) / THAO;
 
-        float body_force_term =
-            WEIGHTS[z] *
-            (DISC_VELOCITY[z].dot_product(forces[i][j]) * delta_t) / C_s_sq;
-
         Vect<int32_t> new_coord =
             Vect{static_cast<int32_t>(j), static_cast<int32_t>(i)} +
             DISC_VELOCITY_INT[z];
+
+        if (new_coord.x < 0 || new_coord.y < 0 || new_coord.x >= WIDTH ||
+            new_coord.y >= HEIGHT) {
+          continue;
+        }
 
         if (blockade[new_coord.y][new_coord.x]) {
           // (out of bounds)
           // apply bounce back technique by reversing the
           // discrete velocity direction
-
           lattice[i][j].pdf[k ^ 1][(z + 4) % 8] +=
               lattice[i][j].pdf[k][z] - relaxation_term;
         } else {
           lattice[new_coord.y][new_coord.x].pdf[k ^ 1][z] +=
-              lattice[i][j].pdf[k][z] - relaxation_term + body_force_term;
+              lattice[i][j].pdf[k][z] - relaxation_term;
         }
       }
     }
+  }
+  for (std::size_t i = 0; i < HEIGHT; i++) {
+    Vect<float> velocity = wanted_velocity;
+
+    float f2 = lattice[i][0].pdf[k ^ 1][2];
+    float f3 = lattice[i][0].pdf[k ^ 1][3];
+    float f4 = lattice[i][0].pdf[k ^ 1][4];
+    float f5 = lattice[i][0].pdf[k ^ 1][5];
+    float f6 = lattice[i][0].pdf[k ^ 1][6];
+    float f8 = lattice[i][0].pdf[k ^ 1][8];
+
+    float cell_density =
+        (f2 + f6 + f8 + 2.f * (f3 + f4 + f5)) / (1.f - velocity.x);
+
+    lattice[i][0].pdf[k ^ 1][0] = f4 + (2.f * cell_density * velocity.x) / 3.f;
+    lattice[i][0].pdf[k ^ 1][7] =
+        f3 + (cell_density * velocity.x) / 6.f + (f2 - f6) / 2.f;
+    lattice[i][0].pdf[k ^ 1][1] =
+        f5 + (cell_density * velocity.x) / 6.f + (f6 - f2) / 2.f;
+
+    lattice[i][WIDTH - 1].pdf[k ^ 1][3] = lattice[i][WIDTH - 2].pdf[k ^ 1][3];
+    lattice[i][WIDTH - 1].pdf[k ^ 1][4] = lattice[i][WIDTH - 2].pdf[k ^ 1][4];
+    lattice[i][WIDTH - 1].pdf[k ^ 1][5] = lattice[i][WIDTH - 2].pdf[k ^ 1][5];
   }
 }
