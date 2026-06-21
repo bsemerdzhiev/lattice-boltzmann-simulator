@@ -89,7 +89,7 @@ std::vector<unsigned char> compute_grid_colors() {
       if (j == 0 && (i == 0 || i == LBM_CONSTANTS::HEIGHT - 1)) {
         continue;
       }
-      const auto &v = LBM::lattice[i][j].velocity;
+      const auto &v = Cell::velocity[i][j];
       float speed = std::sqrt(v.dot_product(v));
       max_speed = std::max(max_speed, speed);
     }
@@ -97,14 +97,14 @@ std::vector<unsigned char> compute_grid_colors() {
 
   for (std::size_t i = 0; i < LBM_CONSTANTS::HEIGHT; i++) {
     for (std::size_t j = 0; j < LBM_CONSTANTS::WIDTH; j++) {
-      const auto &v = LBM::lattice[i][j].velocity;
+      const auto &v = Cell::velocity[i][j];
       float speed = std::sqrt(v.dot_product(v));
       float t = speed / max_speed; // normalized 0..1
       //
       // std::cout << t << " ";
 
       std::size_t idx = (i * LBM_CONSTANTS::WIDTH + j) * 3;
-      if (LBM::blockade[i][j]) {
+      if (Cell::blockade[i][j]) {
         pixels[idx + 0] = 254; // static_cast<unsigned char>(255.f * t); // R
         pixels[idx + 1] = 254; // G
         pixels[idx + 2] =

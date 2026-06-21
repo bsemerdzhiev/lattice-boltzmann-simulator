@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(LbmLib "src/lbm.cpp" "src/benchmark_simulation.cpp"
-                   "src/render_simulation.cpp")
+                   "src/render_simulation.cpp" "src/cell.cpp")
 
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)

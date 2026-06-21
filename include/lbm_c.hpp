@@ -5,21 +5,22 @@
 namespace LBM_CONSTANTS {
 constexpr int32_t HEIGHT = 50;
 constexpr int32_t WIDTH = 300;
+constexpr int32_t TOTAL_CELLS = HEIGHT * WIDTH;
 
 constexpr int32_t LATTICE_COUNT = 9;
 
-constexpr double delta_x = 1.0;
-constexpr double delta_t = 1.0;
+constexpr float delta_x = 1.0f;
+constexpr float delta_t = 1.0f;
 
-constexpr Vect<double> HORIZONTAL_VELOCITY{0.040, 0.0};
+constexpr Vect<float> HORIZONTAL_VELOCITY{0.04f, 0.f};
 
-constexpr double CYLINDER_RADIUS = HEIGHT / 9.0;
+constexpr float CYLINDER_RADIUS = HEIGHT / 9.f;
 
-constexpr double REYNOLDS_NUMBER = 80.0;
+constexpr float REYNOLDS_NUMBER = 80.f;
 
-constexpr double KINEMATIC_VISCOSITY =
+constexpr float KINEMATIC_VISCOSITY =
     (HORIZONTAL_VELOCITY.x * CYLINDER_RADIUS) / REYNOLDS_NUMBER;
 
-constexpr double RELAXATION_OMEGA = 1.0 / (3.0 * KINEMATIC_VISCOSITY + 0.50);
+constexpr float RELAXATION_OMEGA = 1.f / (3.f * KINEMATIC_VISCOSITY + 0.5f);
 
 }; // namespace LBM_CONSTANTS

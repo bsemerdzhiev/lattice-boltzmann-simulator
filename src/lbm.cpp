@@ -1,19 +1,18 @@
 #include "lbm.hpp"
+#include "cell.hpp"
 #include "lbm_c.hpp"
 #include "math_util.hpp"
 #include <cstddef>
-
-LBM::Lattice<Cell> LBM::lattice;
-LBM::Lattice<bool> LBM::blockade;
+#include <iostream>
 
 void LBM::initialize() {
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
     for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
-      lattice[i][j].density = 1.00;
-      lattice[i][j].velocity = LBM_CONSTANTS::HORIZONTAL_VELOCITY;
+      Cell::density[i][j] = 1.0f;
+      Cell::velocity[i][j] = LBM_CONSTANTS::HORIZONTAL_VELOCITY;
 
       for (std::size_t z = 0; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
-        lattice[i][j].pdf[0][z] = WEIGHTS[z];
+        Cell::pdf[0][i][j][z] = WEIGHTS[z];
       }
     }
   }
@@ -21,37 +20,36 @@ void LBM::initialize() {
   // compute the equilibrium velocities
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
     for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
-      if (blockade[i][j]) {
+      if (Cell::blockade[i][j]) {
         continue;
       }
       // calculate the equilibrium distribution
       for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
-        double velocity_q =
-            (DISC_VELOCITY[z].dot_product(lattice[i][j].velocity));
+        float velocity_q = (DISC_VELOCITY[z].dot_product(Cell::velocity[i][j]));
 
-        double linear_term = (3.0 * velocity_q);
+        float linear_term = (3.f * velocity_q);
 
-        double quadratic_term = linear_term * linear_term / 2.0;
+        float quadratic_term = linear_term * linear_term / 2.f;
 
-        double last_term =
-            (3.0 * lattice[i][j].velocity.dot_product(lattice[i][j].velocity)) /
-            (2.0);
+        float last_term =
+            (3.f * Cell::velocity[i][j].dot_product(Cell::velocity[i][j])) /
+            (2.f);
 
-        lattice[i][j].pdf[0][z] =
-            WEIGHTS[z] * lattice[i][j].density *
-            (1.0 + linear_term + quadratic_term - last_term);
+        Cell::pdf[0][i][j][z] =
+            WEIGHTS[z] * Cell::density[i][j] *
+            (1.f + linear_term + quadratic_term - last_term);
       }
     }
   }
 
-  Vect<double> circle_coord{LBM_CONSTANTS::WIDTH / 5.0,
-                            LBM_CONSTANTS::HEIGHT / 2.0};
+  Vect<float> circle_coord{LBM_CONSTANTS::WIDTH / 5.f,
+                           LBM_CONSTANTS::HEIGHT / 2.f};
 
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
     for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
-      if (circle_coord.euclid_dist(Vect<double>{1.0 * j, 1.0 * i}) <
+      if (circle_coord.euclid_dist(Vect<float>{1.f * j, 1.f * i}) <
           LBM_CONSTANTS::CYLINDER_RADIUS) {
-        blockade[i][j] = 1;
+        Cell::blockade[i][j] = 1;
       }
     }
   }
@@ -62,8 +60,8 @@ void LBM::update(bool k) {
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
     for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
       for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
-        lattice[i][j].pdf[k ^ 1][z] = 0.0;
-        lattice[i][j].pdf_eq[k ^ 1][z] = 0.0;
+        Cell::pdf[k ^ 1][i][j][z] = 0.f;
+        Cell::pdf_eq[k ^ 1][i][j][z] = 0.f;
       }
     }
   }
@@ -72,74 +70,73 @@ void LBM::update(bool k) {
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
     // for the outlet, perform interpolation from the results of the
     // previous cell
-    lattice[i][LBM_CONSTANTS::WIDTH - 1].pdf[k][3] =
-        lattice[i][LBM_CONSTANTS::WIDTH - 2].pdf[k][3];
-    lattice[i][LBM_CONSTANTS::WIDTH - 1].pdf[k][4] =
-        lattice[i][LBM_CONSTANTS::WIDTH - 2].pdf[k][4];
-    lattice[i][LBM_CONSTANTS::WIDTH - 1].pdf[k][5] =
-        lattice[i][LBM_CONSTANTS::WIDTH - 2].pdf[k][5];
+    Cell::pdf[k][i][LBM_CONSTANTS::WIDTH - 1][3] =
+        Cell::pdf[k][i][LBM_CONSTANTS::WIDTH - 2][3];
+    Cell::pdf[k][i][LBM_CONSTANTS::WIDTH - 1][4] =
+        Cell::pdf[k][i][LBM_CONSTANTS::WIDTH - 2][4];
+    Cell::pdf[k][i][LBM_CONSTANTS::WIDTH - 1][5] =
+        Cell::pdf[k][i][LBM_CONSTANTS::WIDTH - 2][5];
   }
 
   // compute the macroscopic density and velocity
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
     for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
-      if (blockade[i][j]) {
+      if (Cell::blockade[i][j]) {
         continue;
       }
-      lattice[i][j].density = 0.0;
-      lattice[i][j].velocity = Vect{0.0, 0.0};
+      Cell::density[i][j] = 0.f;
+      Cell::velocity[i][j] = Vect{0.f, 0.f};
       for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
-        lattice[i][j].density += lattice[i][j].pdf[k][z];
-        lattice[i][j].velocity =
-            lattice[i][j].velocity + DISC_VELOCITY[z] * lattice[i][j].pdf[k][z];
+        Cell::density[i][j] += Cell::pdf[k][i][j][z];
+        Cell::velocity[i][j] =
+            Cell::velocity[i][j] + DISC_VELOCITY[z] * Cell::pdf[k][i][j][z];
       }
-      lattice[i][j].velocity = lattice[i][j].velocity / lattice[i][j].density;
+      Cell::velocity[i][j] = Cell::velocity[i][j] / Cell::density[i][j];
     }
   }
 
   // prescribe the Zou/He scheme
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
-    double f2 = lattice[i][0].pdf[k][2];
-    double f3 = lattice[i][0].pdf[k][3];
-    double f4 = lattice[i][0].pdf[k][4];
-    double f5 = lattice[i][0].pdf[k][5];
-    double f6 = lattice[i][0].pdf[k][6];
-    double f8 = lattice[i][0].pdf[k][8];
+    float f2 = Cell::pdf[k][i][0][2];
+    float f3 = Cell::pdf[k][i][0][3];
+    float f4 = Cell::pdf[k][i][0][4];
+    float f5 = Cell::pdf[k][i][0][5];
+    float f6 = Cell::pdf[k][i][0][6];
+    float f8 = Cell::pdf[k][i][0][8];
 
     // skip settings the velocity for
     // the first and last elements of the first column
-    if (i > 0 && i < LBM_CONSTANTS::HEIGHT - 1) {
-      lattice[i][0].velocity = LBM_CONSTANTS::HORIZONTAL_VELOCITY;
+    if ((i > 0) & (i < LBM_CONSTANTS::HEIGHT - 1)) {
+      Cell::velocity[i][0] = LBM_CONSTANTS::HORIZONTAL_VELOCITY;
     }
 
-    double cell_density = (f2 + f6 + f8 + 2.0 * (f3 + f4 + f5)) /
-                          (1.0 - lattice[i][0].velocity.x);
+    float cell_density =
+        (f2 + f6 + f8 + 2.f * (f3 + f4 + f5)) / (1.f - Cell::velocity[i][0].x);
 
-    lattice[i][0].density = cell_density;
+    Cell::density[i][0] = cell_density;
   }
 
   // compute the equilibrium velocities
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
     for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
-      if (blockade[i][j]) {
+      if (Cell::blockade[i][j]) {
         continue;
       }
       // calculate the equilibrium distribution
       for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
-        double velocity_q =
-            (DISC_VELOCITY[z].dot_product(lattice[i][j].velocity));
+        float velocity_q = (DISC_VELOCITY[z].dot_product(Cell::velocity[i][j]));
 
-        double linear_term = (3.0 * velocity_q);
+        float linear_term = (3.f * velocity_q);
 
-        double quadratic_term = linear_term * linear_term / 2.0;
+        float quadratic_term = linear_term * linear_term / 2.f;
 
-        double last_term =
-            (3.0 * lattice[i][j].velocity.dot_product(lattice[i][j].velocity)) /
-            (2.0);
+        float last_term =
+            (3.f * Cell::velocity[i][j].dot_product(Cell::velocity[i][j])) /
+            (2.f);
 
-        lattice[i][j].pdf_eq[k][z] =
-            WEIGHTS[z] * lattice[i][j].density *
-            (1.0 + linear_term + quadratic_term - last_term);
+        Cell::pdf_eq[k][i][j][z] =
+            WEIGHTS[z] * Cell::density[i][j] *
+            (1.f + linear_term + quadratic_term - last_term);
       }
     }
   }
@@ -147,21 +144,21 @@ void LBM::update(bool k) {
   // apply Zou He boundary condition for the inlet flow
   // https://arxiv.org/abs/comp-gas/9611001
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
-    lattice[i][0].pdf[k][0] = lattice[i][0].pdf_eq[k][0];
-    lattice[i][0].pdf[k][1] = lattice[i][0].pdf_eq[k][1];
-    lattice[i][0].pdf[k][7] = lattice[i][0].pdf_eq[k][7];
+    Cell::pdf[k][i][0][0] = Cell::pdf_eq[k][i][0][0];
+    Cell::pdf[k][i][0][1] = Cell::pdf_eq[k][i][0][1];
+    Cell::pdf[k][i][0][7] = Cell::pdf_eq[k][i][0][7];
   }
 
   // collide
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
     for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
-      if (blockade[i][j]) {
+      if (Cell::blockade[i][j]) {
         continue;
       }
       for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
         // calculate collisions
-        double relaxation_term =
-            (lattice[i][j].pdf[k][z] - lattice[i][j].pdf_eq[k][z]) *
+        float relaxation_term =
+            (Cell::pdf[k][i][j][z] - Cell::pdf_eq[k][i][j][z]) *
             LBM_CONSTANTS::RELAXATION_OMEGA;
 
         Vect<int32_t> new_pos = Vect{int32_t(j + LBM_CONSTANTS::WIDTH),
@@ -171,15 +168,15 @@ void LBM::update(bool k) {
         new_pos.y = new_pos.y % LBM_CONSTANTS::HEIGHT;
         new_pos.x = new_pos.x % LBM_CONSTANTS::WIDTH;
 
-        if (blockade[new_pos.y][new_pos.x]) {
+        if (Cell::blockade[new_pos.y][new_pos.x]) {
           // (out of bounds)
           // apply the half-way bounce back technique by reversing the
           // discrete velocity direction
-          lattice[i][j].pdf[k ^ 1][(z + 4) % 8] +=
-              lattice[i][j].pdf[k][z] - relaxation_term;
+          Cell::pdf[k ^ 1][i][j][(z + 4) % 8] +=
+              Cell::pdf[k][i][j][z] - relaxation_term;
         } else {
-          lattice[new_pos.y][new_pos.x].pdf[k ^ 1][z] +=
-              lattice[i][j].pdf[k][z] - relaxation_term;
+          Cell::pdf[k ^ 1][new_pos.y][new_pos.x][z] +=
+              Cell::pdf[k][i][j][z] - relaxation_term;
         }
       }
     }

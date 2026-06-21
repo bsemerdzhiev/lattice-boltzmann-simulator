@@ -7,15 +7,15 @@
 #include <array>
 namespace LBM {
 
-constexpr std::array<double, LBM_CONSTANTS::LATTICE_COUNT> WEIGHTS = {
+constexpr std::array<float, LBM_CONSTANTS::LATTICE_COUNT> WEIGHTS = {
     1.0 / 9.0,  1.0 / 36.0, 1.0 / 9.0,  1.0 / 36.0, 1.0 / 9.0,
     1.0 / 36.0, 1.0 / 9.0,  1.0 / 36.0, 4.0 / 9.0};
 
-constexpr std::array<Vect<double>, LBM_CONSTANTS::LATTICE_COUNT> DISC_VELOCITY =
+constexpr std::array<Vect<float>, LBM_CONSTANTS::LATTICE_COUNT> DISC_VELOCITY =
     {
-        Vect{1.0, 0.0},   Vect{+1.0, -1.0}, Vect{0.0, -1.0},
-        Vect{-1.0, -1.0}, Vect{-1.0, 0.0},  Vect{-1.0, 1.0},
-        Vect{0.0, 1.0},   Vect{+1.0, 1.0},  Vect{0.0, 0.0},
+        Vect{1.f, 0.f},   Vect{+1.f, -1.f}, Vect{0.f, -1.f},
+        Vect{-1.f, -1.f}, Vect{-1.f, 0.f},  Vect{-1.f, 1.f},
+        Vect{0.f, 1.f},   Vect{+1.f, 1.f},  Vect{0.f, 0.f},
 };
 
 constexpr std::array<Vect<int32_t>, LBM_CONSTANTS::LATTICE_COUNT>
@@ -23,13 +23,6 @@ constexpr std::array<Vect<int32_t>, LBM_CONSTANTS::LATTICE_COUNT>
         Vect{1, 0},  Vect{+1, -1}, Vect{0, -1}, Vect{-1, -1}, Vect{-1, 0},
         Vect{-1, 1}, Vect{0, 1},   Vect{+1, 1}, Vect{0, 0},
 };
-
-template <typename T>
-using Lattice =
-    std::array<std::array<T, LBM_CONSTANTS::WIDTH>, LBM_CONSTANTS::HEIGHT>;
-
-extern Lattice<Cell> lattice;
-extern Lattice<bool> blockade;
 
 void initialize();
 
