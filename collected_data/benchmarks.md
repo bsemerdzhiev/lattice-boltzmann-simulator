@@ -1,3 +1,4 @@
+--------------------------------------------------------------------------------
 Sequential runs:
 6'000 steps - 4'203ms
 50'000 steps - 36'616ms
@@ -26,8 +27,10 @@ CPU time passed: 76927.375ms
       76.442323000 seconds user
        0.044983000 seconds sys
 
-
+--------------------------------------------------------------------------------
 After AOS
+
+100'000 steps - 33'944ms
 
 borislav@Borko:~/Documents/lbm-sim/build$ perf stat ./LBMSim
 Simulation started
@@ -52,4 +55,59 @@ CPU time passed: 33944.137ms
 
       33.925430000 seconds user
        0.001999000 seconds sys
+
+--------------------------------------------------------------------------------
+After flattening the array
+
+100'000 steps - 40'991.16ms
+
+CPU time passed: 40991.16ms
+
+ Performance counter stats for './LBMSim':
+
+    40,893,579,331      task-clock                       #    0.998 CPUs utilized
+             5,111      context-switches                 #  124.983 /sec
+                 1      cpu-migrations                   #    0.024 /sec
+               710      page-faults                      #   17.362 /sec
+   518,850,811,542      instructions                     #    3.32  insn per cycle
+   156,067,109,841      cycles                           #    3.816 GHz
+    24,396,661,484      branches                         #  596.589 M/sec
+         7,605,368      branch-misses                    #    0.03% of all branches
+ #     15.9 %  tma_backend_bound
+                                                  #     53.1 %  tma_bad_speculation
+                                                  #      1.8 %  tma_frontend_bound
+                                                  #     29.1 %  tma_retiring
+
+      40.992905590 seconds time elapsed
+
+      40.843046000 seconds user
+       0.036924000 seconds sys
+--------------------------------------------------------------------------------
+After compiler vectorization
+
+100'000 steps - 33'944ms
+
+Simulation started
+CPU time passed: 29954.527ms
+
+ Performance counter stats for './LBMSim':
+
+    29,921,341,207      task-clock                       #    0.999 CPUs utilized
+             1,312      context-switches                 #   43.848 /sec
+                 3      cpu-migrations                   #    0.100 /sec
+               719      page-faults                      #   24.030 /sec
+   402,480,992,371      instructions                     #    3.37  insn per cycle
+   119,515,873,837      cycles                           #    3.994 GHz
+    36,577,142,374      branches                         #    1.222 G/sec
+        26,340,263      branch-misses                    #    0.07% of all branches
+ #     15.4 %  tma_backend_bound
+                                                  #     35.8 %  tma_bad_speculation
+                                                  #      2.8 %  tma_frontend_bound
+                                                  #     45.9 %  tma_retiring
+
+      29.956312792 seconds time elapsed
+
+      29.906979000 seconds user
+       0.010991000 seconds sys
+
 
