@@ -3,11 +3,11 @@
 #include "lbm_c.hpp"
 #include "math_util.hpp"
 #include <cstddef>
-#include <iostream>
 
 void LBM::initialize() {
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
-    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
+    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 8) {
+
       Cell::density[i][j] = 1.0f;
       Cell::velocity[i][j] = LBM_CONSTANTS::HORIZONTAL_VELOCITY;
 

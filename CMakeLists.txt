@@ -21,6 +21,8 @@ target_include_directories(glad PUBLIC "frameworks/glad/include")
 target_include_directories(LbmLib PUBLIC "include/")
 target_link_libraries(LbmLib PRIVATE glfw glad OpenGL::GL)
 
+target_compile_options(LbmLib PRIVATE -march=native -fopt-info-vec
+                                      -fopt-info-vec-missed)
 add_executable(LBMSim "src/main.cpp")
 
 target_link_libraries(LBMSim PRIVATE LbmLib)
