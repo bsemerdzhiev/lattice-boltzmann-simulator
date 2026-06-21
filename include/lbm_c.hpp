@@ -1,20 +1,25 @@
 #pragma once
 
+#include "math_util.hpp"
 #include <cstdint>
-constexpr int32_t HEIGHT = 300;
-constexpr int32_t WIDTH = 600;
+namespace LBM_CONSTANTS {
+constexpr int32_t HEIGHT = 50;
+constexpr int32_t WIDTH = 300;
 
 constexpr int32_t LATTICE_COUNT = 9;
 
-constexpr float delta_x = 1.f;
-constexpr float delta_t = 1.f;
-constexpr float THAO = 1.f;
-constexpr float lattice_speed = 1.f;
+constexpr double delta_x = 1.0;
+constexpr double delta_t = 1.0;
 
-constexpr float C_s_sq = 1.f / 3.f;
+constexpr Vect<double> HORIZONTAL_VELOCITY{0.040, 0.0};
 
-constexpr float U_lid = 0.515f;
+constexpr double CYLINDER_RADIUS = HEIGHT / 9.0;
 
-constexpr float lattice_speed_squred = lattice_speed * lattice_speed;
-constexpr float lattice_speed_quadrupelled =
-    lattice_speed_squred * lattice_speed_squred;
+constexpr double REYNOLDS_NUMBER = 80.0;
+
+constexpr double KINEMATIC_VISCOSITY =
+    (HORIZONTAL_VELOCITY.x * CYLINDER_RADIUS) / REYNOLDS_NUMBER;
+
+constexpr double RELAXATION_OMEGA = 1.0 / (3.0 * KINEMATIC_VISCOSITY + 0.50);
+
+}; // namespace LBM_CONSTANTS

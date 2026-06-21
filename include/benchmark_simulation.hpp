@@ -1,5 +1,5 @@
 #pragma once
 
-namespace SimulateRun {
+namespace BenchmarkRun {
 void run();
 };

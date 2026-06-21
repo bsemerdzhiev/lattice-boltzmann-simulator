@@ -12,6 +12,6 @@ template <class T> struct Vect {
 
   T euclid_dist(Vect rhs) const {
     Vect new_rhs = (*this - rhs);
-    return new_rhs.dot_product(new_rhs);
+    return sqrt(new_rhs.dot_product(new_rhs));
   }
 };
