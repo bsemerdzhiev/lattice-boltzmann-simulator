@@ -1,9 +1,12 @@
 #include <cell.hpp>
 
-Lattice<float> Cell::density;
-Lattice<Vect<float>> Cell::velocity;
+alignas(32) Lattice<float> Cell::density;
+// Lattice<Vect<float>> velocity;
 
-Lattice<bool> Cell::blockade;
+alignas(32) Lattice<float> Cell::velocity_x;
+alignas(32) Lattice<float> Cell::velocity_y;
 
-Lattice<std::array<float, LBM_CONSTANTS::LATTICE_COUNT>> Cell::pdf[2];
-Lattice<std::array<float, LBM_CONSTANTS::LATTICE_COUNT>> Cell::pdf_eq[2];
+alignas(32) Lattice<int32_t> Cell::blockade;
+
+alignas(32) PdfLattice<float> Cell::pdf[2];
+alignas(32) PdfLattice<float> Cell::pdf_eq[2];
