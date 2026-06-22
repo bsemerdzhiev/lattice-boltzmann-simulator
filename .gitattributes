@@ -1,2 +1,2 @@
 # exclude from language statistics
-frameworks/** linguist-vendored=true
+frameworks/glad/** linguist-vendored=true
