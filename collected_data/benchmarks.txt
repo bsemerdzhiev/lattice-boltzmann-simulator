@@ -110,4 +110,29 @@ CPU time passed: 29954.527ms
       29.906979000 seconds user
        0.010991000 seconds sys
 
+--------------------------------------------------------------------------------
+After manual vectorization
+
+CPU time passed: 14338.636ms
+
+ Performance counter stats for './LBMSim':
+
+    14,336,576,665      task-clock                       #    1.000 CPUs utilized
+                85      context-switches                 #    5.929 /sec
+                 1      cpu-migrations                   #    0.070 /sec
+               730      page-faults                      #   50.919 /sec
+   108,178,061,988      instructions                     #    1.91  insn per cycle
+    56,525,233,656      cycles                           #    3.943 GHz
+     2,597,293,723      branches                         #  181.166 M/sec
+        16,121,064      branch-misses                    #    0.62% of all branches
+ #     45.4 %  tma_backend_bound
+                                                  #      4.3 %  tma_bad_speculation
+                                                  #      6.6 %  tma_frontend_bound
+                                                  #     43.7 %  tma_retiring
+
+      14.340247180 seconds time elapsed
+
+      14.335060000 seconds user
+       0.001999000 seconds sys
+
 

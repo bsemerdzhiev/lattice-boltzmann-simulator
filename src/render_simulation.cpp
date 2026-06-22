@@ -89,7 +89,8 @@ std::vector<unsigned char> compute_grid_colors() {
       if (j == 0 && (i == 0 || i == LBM_CONSTANTS::HEIGHT - 1)) {
         continue;
       }
-      const auto &v = Cell::velocity[i][j];
+      const auto &v =
+          Vect<float>{Cell::velocity_x[i][j], Cell::velocity_y[i][j]};
       float speed = std::sqrt(v.dot_product(v));
       max_speed = std::max(max_speed, speed);
     }
@@ -97,7 +98,8 @@ std::vector<unsigned char> compute_grid_colors() {
 
   for (std::size_t i = 0; i < LBM_CONSTANTS::HEIGHT; i++) {
     for (std::size_t j = 0; j < LBM_CONSTANTS::WIDTH; j++) {
-      const auto &v = Cell::velocity[i][j];
+      const auto &v =
+          Vect<float>{Cell::velocity_x[i][j], Cell::velocity_y[i][j]};
       float speed = std::sqrt(v.dot_product(v));
       float t = speed / max_speed; // normalized 0..1
       //
@@ -198,6 +200,7 @@ void RenderSimulation::render() {
 
   bool k = 0;
   int32_t cnt = 0;
+  glfwSwapInterval(0);
   // --- Render loop ---
   while (!glfwWindowShouldClose(window)) {
     if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
@@ -206,7 +209,6 @@ void RenderSimulation::render() {
 
     LBM::update(k);
     if (cnt % 100 == 0) {
-
       std::cout << cnt << "\n";
     }
     cnt++;
