@@ -76,19 +76,19 @@ void LBM::initialize() {
 void LBM::update(bool k, std::size_t from, std::size_t to,
                  std::barrier<> &sync_barrier) {
   sync_barrier.arrive_and_wait();
-  __m256 half = _mm256_set1_ps(0.5f);
-  __m256 zero = _mm256_setzero_ps();
-  __m256 one = _mm256_set1_ps(1.f);
-  __m256 two = _mm256_set1_ps(2.f);
-  __m256 three = _mm256_set1_ps(3.f);
-  __m256 relaxation_constant = _mm256_set1_ps(LBM_CONSTANTS::RELAXATION_OMEGA);
+  __m512 half = _mm512_set1_ps(0.5f);
+  __m512 zero = _mm512_setzero_ps();
+  __m512 one = _mm512_set1_ps(1.f);
+  __m512 two = _mm512_set1_ps(2.f);
+  __m512 three = _mm512_set1_ps(3.f);
+  __m512 relaxation_constant = _mm512_set1_ps(LBM_CONSTANTS::RELAXATION_OMEGA);
 
   // set the pdf of the next step to zero
   for (std::size_t i{from}; i < to; i++) {
     for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
-      for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 8) {
-        _mm256_store_ps(&Cell::pdf[k ^ 1][i][z][j], zero);
-        _mm256_store_ps(&Cell::pdf_eq[k ^ 1][i][z][j], zero);
+      for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 16) {
+        _mm512_store_ps(&Cell::pdf[k ^ 1][i][z][j], zero);
+        _mm512_store_ps(&Cell::pdf_eq[k ^ 1][i][z][j], zero);
       }
     }
   }
@@ -107,31 +107,32 @@ void LBM::update(bool k, std::size_t from, std::size_t to,
 
   // compute the macroscopic density and velocity
   for (std::size_t i{from}; i < to; i++) {
-    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 8) {
+    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 16) {
 
-      __m256 density_arr = zero;
-      __m256 velocity_x = zero;
-      __m256 velocity_y = zero;
+      __m512 density_arr = zero;
+      __m512 velocity_x = zero;
+      __m512 velocity_y = zero;
 
       for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
-        __m256 res = _mm256_load_ps(&Cell::pdf[k][i][z][j]);
-        density_arr = _mm256_add_ps(density_arr, res);
+        __m512 res = _mm512_load_ps(&Cell::pdf[k][i][z][j]);
+        density_arr = _mm512_add_ps(density_arr, res);
 
-        __m256 disc_arr_x = _mm256_set1_ps(DISC_VELOCITY[z].x);
-        __m256 disc_arr_y = _mm256_set1_ps(DISC_VELOCITY[z].y);
+        __m512 disc_arr_x = _mm512_set1_ps(DISC_VELOCITY[z].x);
+        __m512 disc_arr_y = _mm512_set1_ps(DISC_VELOCITY[z].y);
 
-        disc_arr_x = _mm256_mul_ps(disc_arr_x, res);
-        disc_arr_y = _mm256_mul_ps(disc_arr_y, res);
+        disc_arr_x = _mm512_mul_ps(disc_arr_x, res);
+        disc_arr_y = _mm512_mul_ps(disc_arr_y, res);
 
-        velocity_x = _mm256_add_ps(velocity_x, disc_arr_x);
-        velocity_y = _mm256_add_ps(velocity_y, disc_arr_y);
+        velocity_x = _mm512_add_ps(velocity_x, disc_arr_x);
+        velocity_y = _mm512_add_ps(velocity_y, disc_arr_y);
       }
-      velocity_x = _mm256_div_ps(velocity_x, density_arr);
-      velocity_y = _mm256_div_ps(velocity_y, density_arr);
-      _mm256_store_ps(&Cell::velocity_x[i][j], velocity_x);
-      _mm256_store_ps(&Cell::velocity_y[i][j], velocity_y);
+      velocity_x = _mm512_div_ps(velocity_x, density_arr);
+      velocity_y = _mm512_div_ps(velocity_y, density_arr);
 
-      _mm256_store_ps(&Cell::density[i][j], density_arr);
+      _mm512_store_ps(&Cell::velocity_x[i][j], velocity_x);
+      _mm512_store_ps(&Cell::velocity_y[i][j], velocity_y);
+
+      _mm512_store_ps(&Cell::density[i][j], density_arr);
     }
   }
 
@@ -159,44 +160,44 @@ void LBM::update(bool k, std::size_t from, std::size_t to,
 
   // compute the equilibrium velocities
   for (std::size_t i{from}; i < to; i++) {
-    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 8) {
-      __m256 velocity_x = _mm256_load_ps(&Cell::velocity_x[i][j]);
-      __m256 velocity_y = _mm256_load_ps(&Cell::velocity_y[i][j]);
+    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 16) {
+      __m512 velocity_x = _mm512_load_ps(&Cell::velocity_x[i][j]);
+      __m512 velocity_y = _mm512_load_ps(&Cell::velocity_y[i][j]);
 
-      __m256 density = _mm256_load_ps(&Cell::density[i][j]);
+      __m512 density = _mm512_load_ps(&Cell::density[i][j]);
 
       // calculate the equilibrium distribution
       for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
-        __m256 disc_velocity_x = _mm256_set1_ps(DISC_VELOCITY[z].x);
-        __m256 disc_velocity_y = _mm256_set1_ps(DISC_VELOCITY[z].y);
+        __m512 disc_velocity_x = _mm512_set1_ps(DISC_VELOCITY[z].x);
+        __m512 disc_velocity_y = _mm512_set1_ps(DISC_VELOCITY[z].y);
 
-        __m256 velocity_q_x = _mm256_mul_ps(disc_velocity_x, velocity_x);
+        __m512 velocity_q_x = _mm512_mul_ps(disc_velocity_x, velocity_x);
 
-        __m256 dot_product_result =
-            _mm256_fmadd_ps(disc_velocity_y, velocity_y, velocity_q_x);
+        __m512 dot_product_result =
+            _mm512_fmadd_ps(disc_velocity_y, velocity_y, velocity_q_x);
 
-        __m256 linear_term = _mm256_mul_ps(dot_product_result, three);
+        __m512 linear_term = _mm512_mul_ps(dot_product_result, three);
 
-        __m256 quadratic_term = _mm256_mul_ps(linear_term, linear_term);
-        quadratic_term = _mm256_mul_ps(quadratic_term, half);
+        __m512 quadratic_term = _mm512_mul_ps(linear_term, linear_term);
+        quadratic_term = _mm512_mul_ps(quadratic_term, half);
 
-        __m256 magnitude = _mm256_mul_ps(velocity_x, velocity_x);
-        magnitude = _mm256_fmadd_ps(velocity_y, velocity_y, magnitude);
+        __m512 magnitude = _mm512_mul_ps(velocity_x, velocity_x);
+        magnitude = _mm512_fmadd_ps(velocity_y, velocity_y, magnitude);
 
-        __m256 last_term = _mm256_mul_ps(three, magnitude);
-        last_term = _mm256_mul_ps(last_term, half);
+        __m512 last_term = _mm512_mul_ps(three, magnitude);
+        last_term = _mm512_mul_ps(last_term, half);
 
-        __m256 weights_vect = _mm256_set1_ps(WEIGHTS[z]);
+        __m512 weights_vect = _mm512_set1_ps(WEIGHTS[z]);
 
-        __m256 final_result = _mm256_mul_ps(weights_vect, density);
+        __m512 final_result = _mm512_mul_ps(weights_vect, density);
 
-        __m256 internal_summation = _mm256_add_ps(linear_term, quadratic_term);
-        internal_summation = _mm256_sub_ps(internal_summation, last_term);
-        internal_summation = _mm256_add_ps(internal_summation, one);
+        __m512 internal_summation = _mm512_add_ps(linear_term, quadratic_term);
+        internal_summation = _mm512_sub_ps(internal_summation, last_term);
+        internal_summation = _mm512_add_ps(internal_summation, one);
 
-        final_result = _mm256_mul_ps(final_result, internal_summation);
+        final_result = _mm512_mul_ps(final_result, internal_summation);
 
-        _mm256_store_ps(&Cell::pdf_eq[k][i][z][j], final_result);
+        _mm512_store_ps(&Cell::pdf_eq[k][i][z][j], final_result);
       }
     }
   }
@@ -209,98 +210,106 @@ void LBM::update(bool k, std::size_t from, std::size_t to,
     Cell::pdf[k][i][7][0] = Cell::pdf_eq[k][i][7][0];
   }
 
-  __m256i width_vec = _mm256_set1_epi32(LBM_CONSTANTS::WIDTH);
-  __m256i height_vec = _mm256_set1_epi32(LBM_CONSTANTS::HEIGHT);
+  __m512i width_vec = _mm512_set1_epi32(LBM_CONSTANTS::WIDTH);
+  __m512i height_vec = _mm512_set1_epi32(LBM_CONSTANTS::HEIGHT);
 
   // collide (Push stage)
   for (std::size_t i{from}; i < to; i++) {
-    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 8) {
+    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 16) {
 
       for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
         // calculate collisions
         // float relaxation_term =
-        __m256 cur_pdf = _mm256_load_ps(&Cell::pdf[k][i][z][j]);
-        __m256 cur_pdf_eq = _mm256_load_ps(&Cell::pdf_eq[k][i][z][j]);
-        __m256 relaxation_term = _mm256_sub_ps(cur_pdf, cur_pdf_eq);
-        relaxation_term = _mm256_mul_ps(relaxation_term, relaxation_constant);
+        __m512 cur_pdf = _mm512_load_ps(&Cell::pdf[k][i][z][j]);
+        __m512 cur_pdf_eq = _mm512_load_ps(&Cell::pdf_eq[k][i][z][j]);
+        __m512 relaxation_term = _mm512_sub_ps(cur_pdf, cur_pdf_eq);
+        relaxation_term = _mm512_mul_ps(relaxation_term, relaxation_constant);
 
-        __m256 final_result = _mm256_sub_ps(cur_pdf, relaxation_term);
+        __m512 final_result = _mm512_sub_ps(cur_pdf, relaxation_term);
 
-        _mm256_store_ps(&Cell::pdf[k][i][z][j], final_result);
+        _mm512_store_ps(&Cell::pdf[k][i][z][j], final_result);
       }
     }
   }
   sync_barrier.arrive_and_wait();
   for (std::size_t i{from}; i < to; i++) {
-    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 8) {
-      __m256i pos_x =
-          _mm256_add_epi32(_mm256_set1_epi32(j + LBM_CONSTANTS::WIDTH),
-                           _mm256_setr_epi32(0, 1, 2, 3, 4, 5, 6, 7));
-      __m256i pos_y = _mm256_set1_epi32(i + LBM_CONSTANTS::HEIGHT);
+    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 16) {
+      __m512i pos_x =
+          _mm512_add_epi32(_mm512_set1_epi32(j + LBM_CONSTANTS::WIDTH),
+                           _mm512_setr_epi32(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                                             11, 12, 13, 14, 15));
+      __m512i pos_y = _mm512_set1_epi32(i + LBM_CONSTANTS::HEIGHT);
 
       for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
-        __m256i disc_velocity_x = _mm256_set1_epi32(DISC_VELOCITY_INT[z].x);
-        __m256i disc_velocity_y = _mm256_set1_epi32(DISC_VELOCITY_INT[z].y);
+        __m512i disc_velocity_x = _mm512_set1_epi32(DISC_VELOCITY_INT[z].x);
+        __m512i disc_velocity_y = _mm512_set1_epi32(DISC_VELOCITY_INT[z].y);
 
-        disc_velocity_x = _mm256_sub_epi32(pos_x, disc_velocity_x);
+        disc_velocity_x = _mm512_sub_epi32(pos_x, disc_velocity_x);
 
-        __m256i mask = _mm256_cmpgt_epi32(
-            disc_velocity_x, _mm256_set1_epi32(LBM_CONSTANTS::WIDTH - 1));
-        disc_velocity_x = _mm256_sub_epi32(disc_velocity_x,
-                                           _mm256_and_si256(mask, width_vec));
-        mask = _mm256_cmpgt_epi32(disc_velocity_x,
-                                  _mm256_set1_epi32(LBM_CONSTANTS::WIDTH - 1));
-        disc_velocity_x = _mm256_sub_epi32(disc_velocity_x,
-                                           _mm256_and_si256(mask, width_vec));
+        __mmask16 mask = _mm512_cmpgt_epi32_mask(
+            disc_velocity_x, _mm512_set1_epi32(LBM_CONSTANTS::WIDTH - 1));
 
-        disc_velocity_y = _mm256_sub_epi32(pos_y, disc_velocity_y);
-        mask = _mm256_cmpgt_epi32(disc_velocity_y,
-                                  _mm256_set1_epi32(LBM_CONSTANTS::HEIGHT - 1));
-        disc_velocity_y = _mm256_sub_epi32(disc_velocity_y,
-                                           _mm256_and_si256(mask, height_vec));
-        mask = _mm256_cmpgt_epi32(disc_velocity_y,
-                                  _mm256_set1_epi32(LBM_CONSTANTS::HEIGHT - 1));
-        disc_velocity_y = _mm256_sub_epi32(disc_velocity_y,
-                                           _mm256_and_si256(mask, height_vec));
+        disc_velocity_x = _mm512_mask_sub_epi32(disc_velocity_x, mask,
+                                                disc_velocity_x, width_vec);
 
-        __m256i new_ind = _mm256_mullo_epi32(disc_velocity_y, width_vec);
-        new_ind = _mm256_add_epi32(new_ind, disc_velocity_x);
+        mask = _mm512_cmpgt_epi32_mask(
+            disc_velocity_x, _mm512_set1_epi32(LBM_CONSTANTS::WIDTH - 1));
 
-        __m256i blockade_vals =
-            _mm256_i32gather_epi32(&Cell::blockade[0][0], new_ind, 4);
+        disc_velocity_x = _mm512_mask_sub_epi32(disc_velocity_x, mask,
+                                                disc_velocity_x, width_vec);
 
-        __m256 bounce_back = _mm256_load_ps(&Cell::pdf[k][i][(z + 4) % 8][j]);
+        disc_velocity_y = _mm512_sub_epi32(pos_y, disc_velocity_y);
 
-        __m256i base_offset = _mm256_set1_epi32(
+        mask = _mm512_cmpgt_epi32_mask(
+            disc_velocity_y, _mm512_set1_epi32(LBM_CONSTANTS::HEIGHT - 1));
+
+        disc_velocity_y = _mm512_mask_sub_epi32(disc_velocity_y, mask,
+                                                disc_velocity_y, height_vec);
+        mask = _mm512_cmpgt_epi32_mask(
+            disc_velocity_y, _mm512_set1_epi32(LBM_CONSTANTS::HEIGHT - 1));
+
+        disc_velocity_y = _mm512_mask_sub_epi32(disc_velocity_y, mask,
+                                                disc_velocity_y, height_vec);
+
+        __m512i new_ind = _mm512_mullo_epi32(disc_velocity_y, width_vec);
+        new_ind = _mm512_add_epi32(new_ind, disc_velocity_x);
+
+        __m512i blockade_vals =
+            _mm512_i32gather_epi32(new_ind, &Cell::blockade[0][0], 4);
+
+        __m512 bounce_back = _mm512_load_ps(&Cell::pdf[k][i][(z + 4) % 8][j]);
+
+        __m512i base_offset = _mm512_set1_epi32(
             k * LBM_CONSTANTS::HEIGHT * LBM_CONSTANTS::LATTICE_COUNT *
                 LBM_CONSTANTS::WIDTH +
             z * LBM_CONSTANTS::WIDTH);
 
-        __m256i source_idx = _mm256_add_epi32(
-            _mm256_mullo_epi32(disc_velocity_y,
-                               _mm256_set1_epi32(LBM_CONSTANTS::LATTICE_COUNT *
+        __m512i source_idx = _mm512_add_epi32(
+            _mm512_mullo_epi32(disc_velocity_y,
+                               _mm512_set1_epi32(LBM_CONSTANTS::LATTICE_COUNT *
                                                  LBM_CONSTANTS::WIDTH)),
 
-            _mm256_add_epi32(base_offset, disc_velocity_x));
-        __m256 pulled_pdf =
-            _mm256_i32gather_ps(&Cell::pdf[0][0][0][0], source_idx, 4);
-        __m256 blockade_mask = _mm256_castsi256_ps(_mm256_andnot_si256(
-            _mm256_cmpeq_epi32(blockade_vals, _mm256_setzero_si256()),
-            _mm256_set1_epi32(0xFFFFFFFF)));
+            _mm512_add_epi32(base_offset, disc_velocity_x));
+        __m512 pulled_pdf =
+            _mm512_i32gather_ps(source_idx, &Cell::pdf[0][0][0][0], 4);
 
-        __m256 result =
-            _mm256_blendv_ps(pulled_pdf, bounce_back, blockade_mask);
+        __mmask16 blockade_mask =
+            _mm512_cmpeq_epi32_mask(blockade_vals, _mm512_setzero_si512());
 
-        __m256i is_current_cell_blocked =
-            _mm256_load_epi32(&Cell::blockade[i][j]);
-        __m256 blocked_mask = _mm256_castsi256_ps(_mm256_cmpeq_epi32(
-            is_current_cell_blocked, _mm256_setzero_si256()));
+        __m512 result =
+            _mm512_mask_blend_ps(blockade_mask, bounce_back, pulled_pdf);
 
-        __m256 existing = _mm256_load_ps(&Cell::pdf[k ^ 1][i][z][j]);
+        __m512i is_current_cell_blocked =
+            _mm512_load_epi32(&Cell::blockade[i][j]);
 
-        __m256 final = _mm256_blendv_ps(existing, result, blocked_mask);
+        __mmask16 blocked_mask = _mm512_cmpeq_epi32_mask(
+            is_current_cell_blocked, _mm512_setzero_si512());
 
-        _mm256_store_ps(&Cell::pdf[k ^ 1][i][z][j], final);
+        __m512 existing = _mm512_load_ps(&Cell::pdf[k ^ 1][i][z][j]);
+
+        __m512 final = _mm512_mask_blend_ps(blocked_mask, existing, result);
+
+        _mm512_store_ps(&Cell::pdf[k ^ 1][i][z][j], final);
       }
     }
   }
