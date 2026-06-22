@@ -85,7 +85,7 @@ CPU time passed: 40991.16ms
 --------------------------------------------------------------------------------
 After compiler vectorization
 
-100'000 steps - 33'944ms
+100'000 steps - 29'954ms
 
 Simulation started
 CPU time passed: 29954.527ms
@@ -134,5 +134,49 @@ CPU time passed: 14338.636ms
 
       14.335060000 seconds user
        0.001999000 seconds sys
+
+
+--------------------------------------------------------------------------------
+After going multithread
+
+Simulation started
+CPU time passed: 5890.116ms
+
+ Performance counter stats for './LBMSim':
+
+    27,172,243,304      task-clock                       #    4.611 CPUs utilized
+         2,619,902      context-switches                 #   96.418 K/sec
+             1,956      cpu-migrations                   #   71.985 /sec
+               765      page-faults                      #   28.154 /sec
+   139,347,788,591      instructions                     #    1.63  insn per cycle
+    85,508,116,603      cycles                           #    3.147 GHz
+     8,689,012,923      branches                         #  319.775 M/sec
+        37,163,954      branch-misses                    #    0.43% of all branches
+ #     19.0 %  tma_backend_bound
+                                                  #     71.6 %  tma_bad_speculation
+                                                  #      3.1 %  tma_frontend_bound
+                                                  #      6.3 %  tma_retiring
+
+       5.892400032 seconds time elapsed
+
+      18.494327000 seconds user
+       9.295535000 seconds sys
+
+
+Simulation started
+CPU time passed: 5467.6064ms
+
+ Performance counter stats for './LBMSim':
+
+         2,686,700      cache-misses                     #    0.43% of all cache refs
+       622,500,402      cache-references
+     8,211,125,572      L1-dcache-load-misses            #   37.28% of all L1-dcache accesses
+    22,023,364,584      L1-dcache-loads
+         2,593,647      machine_clears.memory_ordering
+
+       5.469442954 seconds time elapsed
+
+      17.409063000 seconds user
+       6.932342000 seconds sys
 
 
