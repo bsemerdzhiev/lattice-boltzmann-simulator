@@ -7,7 +7,7 @@
 #include <pthread.h>
 #include <thread>
 
-constexpr std::size_t THREAD_COUNT = 4;
+constexpr std::size_t THREAD_COUNT = 8;
 
 std::barrier<> sync_barrier{THREAD_COUNT + 1};
 

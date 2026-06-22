@@ -46,6 +46,10 @@ void LBM::initialize() {
       }
     }
   }
+  // for (std::size_t i{0}; i < LBM_CONSTANTS::WIDTH; i++) {
+  //   Cell::blockade[0][i] = 1;
+  //   Cell::blockade[LBM_CONSTANTS::HEIGHT - 1][i] = 1;
+  // }
 
   Vect<float> circle_coord{LBM_CONSTANTS::WIDTH / 5.f,
                            LBM_CONSTANTS::HEIGHT / 2.f};
