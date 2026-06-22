@@ -1,0 +1,2 @@
+# exclude from language statistics
+include/glad/ linguist-vendored=true
