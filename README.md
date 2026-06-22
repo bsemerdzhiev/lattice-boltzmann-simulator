@@ -3,12 +3,15 @@
 A high-performance 2D fluid dynamics simulator built in C++ using the D2Q9 Lattice Boltzmann Method (LBM), achieving a **15x cumulative speedup** over the scalar baseline through a sequence of profiler-driven optimizations: SoA memory layout, manual AVX512 SIMD vectorization, and multi-core parallelization.
 
 ![Vorticity visualization showing von Kármán vortex street](docs/vortex_street.png)
-*Von Kármán vortex street behind a cylinder at Re=80. Red = positive curl, blue = negative curl, black = zero vorticity.*
+*Von Kármán vortex street behind a cylinder at Re=80. Red = positive curl, blue = negative curl, black = zero vorticity. Upper graph velocity, lower vorticity.*
+
+![The color-map used above](docs/lbm_colorbars.png)
+*The color-map used for the images generated above and below*
 
 
 
 ![Visualisation of Poiseuille flow](docs/poiseuile_flow.png)
-*Poiseuille flow at Re=80*
+*Poiseuille flow at Re=80. Upper graph velocity, lower vorticity.*
 
 ---
 
