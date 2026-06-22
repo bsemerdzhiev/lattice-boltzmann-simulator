@@ -4,6 +4,7 @@
 #include <array>
 #include <cstddef>
 #include <iostream>
+#include <pthread.h>
 #include <thread>
 
 constexpr std::size_t THREAD_COUNT = 4;
@@ -21,7 +22,13 @@ void LBMParallel::init_threads() {
       (LBM_CONSTANTS::HEIGHT + THREAD_COUNT - 1) / THREAD_COUNT;
 
   for (std::size_t i{0}; i < THREAD_COUNT; i++) {
+
     threads[i] = std::thread([rows_per_thread, i, &sync_barrier, &exit_cond]() {
+      cpu_set_t cpuset;
+      CPU_ZERO(&cpuset);
+      CPU_SET(i, &cpuset);
+      pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset);
+
       bool k = 0;
       while (!exit_cond) {
         // std::cout << "DSA" << "\n";
@@ -32,10 +39,6 @@ void LBMParallel::init_threads() {
         k ^= 1;
       }
     });
-    cpu_set_t cpuset;
-    CPU_ZERO(&cpuset);
-    CPU_SET(i, &cpuset);
-    pthread_setaffinity_np(threads[i].native_handle(), sizeof(cpuset), &cpuset);
   }
 }
 

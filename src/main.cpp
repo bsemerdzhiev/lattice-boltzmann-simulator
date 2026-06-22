@@ -3,8 +3,8 @@
 #include <cstdint>
 
 int32_t main() {
-  // RenderSimulation::render();
-  BenchmarkRun::run();
+  RenderSimulation::render();
+  // BenchmarkRun::run();
 
   return 0;
 }
