@@ -1,10 +1,10 @@
 #pragma once
 
-#include "cell.hpp"
 #include "lbm_c.hpp"
 #include "math_util.hpp"
 
 #include <array>
+#include <barrier>
 namespace LBM {
 
 constexpr std::array<float, LBM_CONSTANTS::LATTICE_COUNT> WEIGHTS = {
@@ -26,5 +26,6 @@ constexpr std::array<Vect<int32_t>, LBM_CONSTANTS::LATTICE_COUNT>
 
 void initialize();
 
-void update(bool turn);
+void update(bool k, std::size_t from, std::size_t to,
+            std::barrier<> &sync_barrier);
 } // namespace LBM

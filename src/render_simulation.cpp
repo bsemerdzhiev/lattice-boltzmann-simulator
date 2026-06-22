@@ -1,8 +1,10 @@
 #include "render_simulation.hpp"
+#include "cell.hpp"
 #include "lbm.hpp"
 #include "lbm_c.hpp"
 
 #include "glad/glad.h"
+#include "lbm_parallel.hpp"
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <cmath>
@@ -196,9 +198,9 @@ void RenderSimulation::render() {
   glUseProgram(shader_program);
   glUniform1i(glGetUniformLocation(shader_program, "gridTexture"), 0);
 
-  LBM::initialize();
+  LBMParallel::init_threads();
 
-  bool k = 0;
+  // bool k = 0;
   glfwSwapInterval(0);
   // --- Render loop ---
   while (!glfwWindowShouldClose(window)) {
@@ -206,8 +208,9 @@ void RenderSimulation::render() {
       glfwSetWindowShouldClose(window, true);
     }
 
-    LBM::update(k);
-    k ^= 1;
+    // LBM::update(k);
+    LBMParallel::run_iteration(false);
+    // k ^= 1;
 
     std::vector<unsigned char> pixels = compute_grid_colors();
     glBindTexture(GL_TEXTURE_2D, texture);

@@ -1,6 +1,8 @@
 #include "benchmark_simulation.hpp"
 #include "lbm.hpp"
+#include "lbm_parallel.hpp"
 
+#include <atomic>
 #include <chrono>
 #include <cstdint>
 #include <iostream>
@@ -10,15 +12,15 @@ constexpr int32_t TIMESTEPS = 100'000;
 
 void BenchmarkRun::run() {
   std::cout << std::format("Simulation started\n");
-  LBM::initialize();
+
+  LBMParallel::init_threads();
 
   auto tic = std::chrono::high_resolution_clock::now();
 
-  bool k = 0;
   for (int32_t i{0}; i < TIMESTEPS; i++) {
-    LBM::update(k);
-    k ^= 1;
+    LBMParallel::run_iteration(i == TIMESTEPS - 1);
   }
+  LBMParallel::stop_threads();
 
   auto tac = std::chrono::high_resolution_clock::now();
 
