@@ -72,8 +72,8 @@ void LBM::update(bool k) {
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
     for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
       for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 8) {
-        _mm256_storeu_ps(&Cell::pdf[k ^ 1][i][z][j], zero);
-        _mm256_storeu_ps(&Cell::pdf_eq[k ^ 1][i][z][j], zero);
+        _mm256_store_ps(&Cell::pdf[k ^ 1][i][z][j], zero);
+        _mm256_store_ps(&Cell::pdf_eq[k ^ 1][i][z][j], zero);
       }
     }
   }
@@ -99,7 +99,7 @@ void LBM::update(bool k) {
       __m256 velocity_y = zero;
 
       for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
-        __m256 res = _mm256_loadu_ps(&Cell::pdf[k][i][z][j]);
+        __m256 res = _mm256_load_ps(&Cell::pdf[k][i][z][j]);
         density_arr = _mm256_add_ps(density_arr, res);
 
         __m256 disc_arr_x = _mm256_set1_ps(DISC_VELOCITY[z].x);
@@ -113,10 +113,10 @@ void LBM::update(bool k) {
       }
       velocity_x = _mm256_div_ps(velocity_x, density_arr);
       velocity_y = _mm256_div_ps(velocity_y, density_arr);
-      _mm256_storeu_ps(&Cell::velocity_x[i][j], velocity_x);
-      _mm256_storeu_ps(&Cell::velocity_y[i][j], velocity_y);
+      _mm256_store_ps(&Cell::velocity_x[i][j], velocity_x);
+      _mm256_store_ps(&Cell::velocity_y[i][j], velocity_y);
 
-      _mm256_storeu_ps(&Cell::density[i][j], density_arr);
+      _mm256_store_ps(&Cell::density[i][j], density_arr);
     }
   }
 
@@ -145,10 +145,10 @@ void LBM::update(bool k) {
   // compute the equilibrium velocities
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
     for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 8) {
-      __m256 velocity_x = _mm256_loadu_ps(&Cell::velocity_x[i][j]);
-      __m256 velocity_y = _mm256_loadu_ps(&Cell::velocity_y[i][j]);
+      __m256 velocity_x = _mm256_load_ps(&Cell::velocity_x[i][j]);
+      __m256 velocity_y = _mm256_load_ps(&Cell::velocity_y[i][j]);
 
-      __m256 density = _mm256_loadu_ps(&Cell::density[i][j]);
+      __m256 density = _mm256_load_ps(&Cell::density[i][j]);
 
       // calculate the equilibrium distribution
       for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
@@ -181,7 +181,7 @@ void LBM::update(bool k) {
 
         final_result = _mm256_mul_ps(final_result, internal_summation);
 
-        _mm256_storeu_ps(&Cell::pdf_eq[k][i][z][j], final_result);
+        _mm256_store_ps(&Cell::pdf_eq[k][i][z][j], final_result);
       }
     }
   }
@@ -204,14 +204,14 @@ void LBM::update(bool k) {
       for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
         // calculate collisions
         // float relaxation_term =
-        __m256 cur_pdf = _mm256_loadu_ps(&Cell::pdf[k][i][z][j]);
-        __m256 cur_pdf_eq = _mm256_loadu_ps(&Cell::pdf_eq[k][i][z][j]);
+        __m256 cur_pdf = _mm256_load_ps(&Cell::pdf[k][i][z][j]);
+        __m256 cur_pdf_eq = _mm256_load_ps(&Cell::pdf_eq[k][i][z][j]);
         __m256 relaxation_term = _mm256_sub_ps(cur_pdf, cur_pdf_eq);
         relaxation_term = _mm256_mul_ps(relaxation_term, relaxation_constant);
 
         __m256 final_result = _mm256_sub_ps(cur_pdf, relaxation_term);
 
-        _mm256_storeu_ps(&Cell::pdf[k][i][z][j], final_result);
+        _mm256_store_ps(&Cell::pdf[k][i][z][j], final_result);
       }
     }
   }
@@ -253,7 +253,7 @@ void LBM::update(bool k) {
         __m256i blockade_vals =
             _mm256_i32gather_epi32(&Cell::blockade[0][0], new_ind, 4);
 
-        __m256 bounce_back = _mm256_loadu_ps(&Cell::pdf[k][i][(z + 4) % 8][j]);
+        __m256 bounce_back = _mm256_load_ps(&Cell::pdf[k][i][(z + 4) % 8][j]);
 
         __m256i base_offset = _mm256_set1_epi32(
             k * LBM_CONSTANTS::HEIGHT * LBM_CONSTANTS::LATTICE_COUNT *
@@ -276,15 +276,15 @@ void LBM::update(bool k) {
             _mm256_blendv_ps(pulled_pdf, bounce_back, blockade_mask);
 
         __m256i is_current_cell_blocked =
-            _mm256_loadu_epi32(&Cell::blockade[i][j]);
+            _mm256_load_epi32(&Cell::blockade[i][j]);
         __m256 blocked_mask = _mm256_castsi256_ps(_mm256_cmpeq_epi32(
             is_current_cell_blocked, _mm256_setzero_si256()));
 
-        __m256 existing = _mm256_loadu_ps(&Cell::pdf[k ^ 1][i][z][j]);
+        __m256 existing = _mm256_load_ps(&Cell::pdf[k ^ 1][i][z][j]);
 
         __m256 final = _mm256_blendv_ps(existing, result, blocked_mask);
 
-        _mm256_storeu_ps(&Cell::pdf[k ^ 1][i][z][j], final);
+        _mm256_store_ps(&Cell::pdf[k ^ 1][i][z][j], final);
       }
     }
   }

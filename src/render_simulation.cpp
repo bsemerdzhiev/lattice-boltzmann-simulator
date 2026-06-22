@@ -199,7 +199,6 @@ void RenderSimulation::render() {
   LBM::initialize();
 
   bool k = 0;
-  int32_t cnt = 0;
   glfwSwapInterval(0);
   // --- Render loop ---
   while (!glfwWindowShouldClose(window)) {
@@ -208,10 +207,6 @@ void RenderSimulation::render() {
     }
 
     LBM::update(k);
-    if (cnt % 100 == 0) {
-      std::cout << cnt << "\n";
-    }
-    cnt++;
     k ^= 1;
 
     std::vector<unsigned char> pixels = compute_grid_colors();
