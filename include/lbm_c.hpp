@@ -3,8 +3,8 @@
 #include "math_util.hpp"
 #include <cstdint>
 namespace LBM_CONSTANTS {
-constexpr int32_t HEIGHT = 50;
-constexpr int32_t WIDTH = 304;
+constexpr int32_t HEIGHT = 50 * 2;
+constexpr int32_t WIDTH = 304 * 2;
 constexpr int32_t TOTAL_CELLS = HEIGHT * WIDTH;
 
 constexpr int32_t LATTICE_COUNT = 9;
