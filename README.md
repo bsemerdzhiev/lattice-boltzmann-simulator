@@ -1,6 +1,6 @@
 # Lattice Boltzmann Fluid Simulator
 
-A high-performance 2D fluid dynamics simulator built in C++ using the D2Q9 Lattice Boltzmann Method (LBM), achieving a **15x cumulative speedup** over the scalar baseline through a sequence of profiler-driven optimizations: SoA memory layout, manual AVX512 SIMD vectorization, and multi-core parallelization.
+A high-performance 2D fluid dynamics simulator built in C++ using the D2Q9 Lattice Boltzmann Method (LBM), achieving a **15x cumulative speedup** over the scalar baseline through a sequence of profiler-driven optimizations: SoA memory layout, manual AVX2 SIMD vectorization, and multi-core parallelization.
 
 ![Vorticity visualization showing von Kármán vortex street](docs/vortex_street.png)
 *Von Kármán vortex street behind a cylinder at Re=80. Red = positive curl, blue = negative curl, black = zero vorticity. Upper graph velocity, lower vorticity.*
@@ -57,7 +57,7 @@ All benchmarks run on 100,000 timesteps, 300×50 domain. Profiling via Linux `pe
 | Scalar baseline (double, AoS) | 76,930 | — | 1.0x | bad_speculation 56.2% |
 | SoA layout + float precision | 33,944 | 2.27x | 2.27x | bad_speculation → 13.3% |
 | Compiler auto-vectorization (`-march=native`) | 29,954 | 1.13x | 2.57x | bad_speculation 35.8% |
-| Manual AVX512 SIMD | 14,338 | 2.09x | 5.36x | backend_bound 45.4% |
+| Manual AVX2 SIMD | 14,338 | 2.09x | 5.36x | backend_bound 45.4% |
 | Multithreading (6 cores) | 5,097 | 2.81x | **15.1x** | — |
 
 ### Stage-by-stage analysis
@@ -72,15 +72,15 @@ Adding `-march=native -fopt-info-vec` revealed the compiler vectorized only a ha
 
 The message from this step was that a restructuring both in the dimensions of the arrays (moving the column dimension to be the last) and in the way how the algorithm is executed was needed.
 
-**Manual AVX512 SIMD (2.09x)**
+**Manual AVX2 SIMD (2.09x)**
 
-Hand-written AVX512 intrinsics targeting three phases:
+Hand-written AVX2 intrinsics targeting three phases:
 
 - **Macroscopic reduction** — 8-wide horizontal sum across 9 directions using `_mm256_fmadd_ps` for density and velocity accumulation, single `_mm256_rcp_ps` division
 - **Equilibrium computation** — fully vectorized BGK f^eq formula with FMA chains for the linear/quadratic/last terms
 - **Collision + streaming** — restructured from push (scatter writes) to **pull (gather reads)**
 
-The push→pull restructure was the key algorithmic insight: in push streaming, each cell writes its post-collision pdf to a neighbor — a scatter write that AVX512 cannot express (no scatter instruction). In pull streaming, each cell reads the pdf that *would have streamed to it* from its upstream neighbor — a gather read, which AVX512 supports via `_mm256_i32gather_ps`. This converted an inherently scalar scatter pattern into a vectorizable gather pattern, enabling SIMD on the streaming pass.
+The push→pull restructure was the key algorithmic insight: in push streaming, each cell writes its post-collision pdf to a neighbor — a scatter write that AVX2 cannot express (no scatter instruction). In pull streaming, each cell reads the pdf that *would have streamed to it* from its upstream neighbor — a gather read, which AVX2 supports via `_mm256_i32gather_ps`. This converted an inherently scalar scatter pattern into a vectorizable gather pattern, enabling SIMD on the streaming pass.
 
 `tma_bad_speculation` dropped from 35.8% → 4.3% (branches replaced by branchless `_mm256_blendv_ps` for obstacle handling). Instructions dropped from 402B → 108B (3.7x reduction).
 
@@ -228,7 +228,7 @@ cmake --build . -j$(nproc)
 ./LBMSim render
 ```
 
-**Dependencies:** GLFW3, OpenGL 3.3, GLAD (vendored), C++20 compiler with AVX512 support.
+**Dependencies:** GLFW3, OpenGL 3.3, GLAD (vendored), C++20 compiler with AVX2 support.
 
 **Compiler flags:** `-O3 -march=native -std=c++20`
 
