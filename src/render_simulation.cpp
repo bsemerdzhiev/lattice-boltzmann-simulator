@@ -1,11 +1,14 @@
 #include "render_simulation.hpp"
+#include "cell.hpp"
 #include "lbm.hpp"
 #include "lbm_c.hpp"
 
 #include "glad/glad.h"
+#include "lbm_parallel.hpp"
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -81,34 +84,23 @@ GLuint build_shader_program() {
 
 std::vector<unsigned char> compute_grid_colors() {
   std::vector<unsigned char> pixels(LBM_CONSTANTS::WIDTH *
-                                    LBM_CONSTANTS::HEIGHT * 3);
-
-  float max_speed = 1e-6f; // avoid divide-by-zero on the first frame
-  for (std::size_t i = 0; i < LBM_CONSTANTS::HEIGHT; i++) {
-    for (std::size_t j = 0; j < LBM_CONSTANTS::WIDTH; j++) {
-      if (j == 0 && (i == 0 || i == LBM_CONSTANTS::HEIGHT - 1)) {
-        continue;
-      }
-      const auto &v =
-          Vect<float>{Cell::velocity_x[i][j], Cell::velocity_y[i][j]};
-      float speed = std::sqrt(v.dot_product(v));
-      max_speed = std::max(max_speed, speed);
-    }
-  }
+                                    LBM_CONSTANTS::HEIGHT * 3 * 2);
 
   for (std::size_t i = 0; i < LBM_CONSTANTS::HEIGHT; i++) {
     for (std::size_t j = 0; j < LBM_CONSTANTS::WIDTH; j++) {
       const auto &v =
           Vect<float>{Cell::velocity_x[i][j], Cell::velocity_y[i][j]};
+      float max_speed = 0.06f; // avoid divide-by-zero on the first frame
+      //
       float speed = std::sqrt(v.dot_product(v));
-      float t = speed / max_speed; // normalized 0..1
+      float t = std::clamp(speed / max_speed, 0.f, 1.f); // normalized 0..1
       //
       // std::cout << t << " ";
 
       std::size_t idx = (i * LBM_CONSTANTS::WIDTH + j) * 3;
       if (Cell::blockade[i][j]) {
-        pixels[idx + 0] = 254; // static_cast<unsigned char>(255.f * t); // R
-        pixels[idx + 1] = 254; // G
+        pixels[idx + 0] = 0;   // static_cast<unsigned char>(255.f * t); // R
+        pixels[idx + 1] = 255; // G
         pixels[idx + 2] =
             0; // static_cast<unsigned char>(255.f * (1.f - t)); // B
       } else {
@@ -116,6 +108,43 @@ std::vector<unsigned char> compute_grid_colors() {
         pixels[idx + 1] = 0;                                             // G
         pixels[idx + 2] = static_cast<unsigned char>(255.f * (1.f - t)); // B
       }
+    }
+    // std::cout << "\n";
+  }
+
+  for (std::size_t i = 0; i < LBM_CONSTANTS::HEIGHT; i++) {
+    for (std::size_t j = 0; j < LBM_CONSTANTS::WIDTH; j++) {
+      const auto &v =
+          Vect<float>{Cell::velocity_x[i][j], Cell::velocity_y[i][j]};
+
+      float curl =
+          (Cell::velocity_x[i + 1][j] - Cell::velocity_x[i - 1][j]) * 0.5f -
+          (Cell::velocity_y[i][j + 1] - Cell::velocity_y[i][j - 1]) * 0.5f;
+
+      float max_curl = 0.005f;
+      float t = std::clamp(curl / max_curl, -1.f, 1.f);
+
+      uint8_t r, g, b;
+      if (t < 0) {
+        r = 255 - uint8_t(255 * (1.f + t));
+        g = 0;
+        b = 0;
+      } else {
+        r = 0;
+        g = 0;
+        b = 255 - uint8_t(255 * (1.f - t));
+      }
+      if (Cell::blockade[i][j]) {
+        r = 0;
+        g = 255;
+        b = 0;
+      }
+      std::size_t idx =
+          ((i + LBM_CONSTANTS::HEIGHT) * LBM_CONSTANTS::WIDTH + j) * 3;
+
+      pixels[idx + 0] = r;
+      pixels[idx + 1] = g;
+      pixels[idx + 2] = b;
     }
     // std::cout << "\n";
   }
@@ -131,8 +160,8 @@ void RenderSimulation::render() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  const int WINDOW_WIDTH = 1000;
-  const int WINDOW_HEIGHT = 450;
+  const int WINDOW_WIDTH = 1550;
+  const int WINDOW_HEIGHT = 550;
   GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT,
                                         "LBM Visualizer", nullptr, nullptr);
   if (window == nullptr) {
@@ -191,14 +220,14 @@ void RenderSimulation::render() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, LBM_CONSTANTS::WIDTH,
-               LBM_CONSTANTS::HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+               LBM_CONSTANTS::HEIGHT * 2, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
   glUseProgram(shader_program);
   glUniform1i(glGetUniformLocation(shader_program, "gridTexture"), 0);
 
-  LBM::initialize();
+  LBMParallel::init_threads();
 
-  bool k = 0;
+  // bool k = 0;
   glfwSwapInterval(0);
   // --- Render loop ---
   while (!glfwWindowShouldClose(window)) {
@@ -206,13 +235,14 @@ void RenderSimulation::render() {
       glfwSetWindowShouldClose(window, true);
     }
 
-    LBM::update(k);
-    k ^= 1;
+    // LBM::update(k);
+    LBMParallel::run_iteration(false);
+    // k ^= 1;
 
     std::vector<unsigned char> pixels = compute_grid_colors();
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, LBM_CONSTANTS::WIDTH,
-                    LBM_CONSTANTS::HEIGHT, GL_RGB, GL_UNSIGNED_BYTE,
+                    LBM_CONSTANTS::HEIGHT * 2, GL_RGB, GL_UNSIGNED_BYTE,
                     pixels.data());
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);

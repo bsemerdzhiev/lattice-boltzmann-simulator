@@ -46,6 +46,10 @@ void LBM::initialize() {
       }
     }
   }
+  // for (std::size_t i{0}; i < LBM_CONSTANTS::WIDTH; i++) {
+  //   Cell::blockade[0][i] = 1;
+  //   Cell::blockade[LBM_CONSTANTS::HEIGHT - 1][i] = 1;
+  // }
 
   Vect<float> circle_coord{LBM_CONSTANTS::WIDTH / 5.f,
                            LBM_CONSTANTS::HEIGHT / 2.f};
@@ -60,7 +64,9 @@ void LBM::initialize() {
   }
 }
 
-void LBM::update(bool k) {
+void LBM::update(bool k, std::size_t from, std::size_t to,
+                 std::barrier<> &sync_barrier) {
+  sync_barrier.arrive_and_wait();
   __m256 half = _mm256_set1_ps(0.5f);
   __m256 zero = _mm256_setzero_ps();
   __m256 one = _mm256_set1_ps(1.f);
@@ -69,7 +75,7 @@ void LBM::update(bool k) {
   __m256 relaxation_constant = _mm256_set1_ps(LBM_CONSTANTS::RELAXATION_OMEGA);
 
   // set the pdf of the next step to zero
-  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+  for (std::size_t i{from}; i < to; i++) {
     for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
       for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 8) {
         _mm256_store_ps(&Cell::pdf[k ^ 1][i][z][j], zero);
@@ -79,7 +85,7 @@ void LBM::update(bool k) {
   }
 
   // right boundary outlet
-  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+  for (std::size_t i{from}; i < to; i++) {
     // for the outlet, perform interpolation from the results of the
     // previous cell
     Cell::pdf[k][i][3][LBM_CONSTANTS::WIDTH - 1] =
@@ -91,7 +97,7 @@ void LBM::update(bool k) {
   }
 
   // compute the macroscopic density and velocity
-  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+  for (std::size_t i{from}; i < to; i++) {
     for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 8) {
 
       __m256 density_arr = zero;
@@ -121,7 +127,7 @@ void LBM::update(bool k) {
   }
 
   // prescribe the Zou/He scheme
-  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+  for (std::size_t i{from}; i < to; i++) {
     float f2 = Cell::pdf[k][i][2][0];
     float f3 = Cell::pdf[k][i][3][0];
     float f4 = Cell::pdf[k][i][4][0];
@@ -143,7 +149,7 @@ void LBM::update(bool k) {
   }
 
   // compute the equilibrium velocities
-  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+  for (std::size_t i{from}; i < to; i++) {
     for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 8) {
       __m256 velocity_x = _mm256_load_ps(&Cell::velocity_x[i][j]);
       __m256 velocity_y = _mm256_load_ps(&Cell::velocity_y[i][j]);
@@ -188,7 +194,7 @@ void LBM::update(bool k) {
 
   // apply Zou He boundary condition for the inlet flow
   // https://arxiv.org/abs/comp-gas/9611001
-  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+  for (std::size_t i{from}; i < to; i++) {
     Cell::pdf[k][i][0][0] = Cell::pdf_eq[k][i][0][0];
     Cell::pdf[k][i][1][0] = Cell::pdf_eq[k][i][1][0];
     Cell::pdf[k][i][7][0] = Cell::pdf_eq[k][i][7][0];
@@ -198,7 +204,7 @@ void LBM::update(bool k) {
   __m256i height_vec = _mm256_set1_epi32(LBM_CONSTANTS::HEIGHT);
 
   // collide (Push stage)
-  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+  for (std::size_t i{from}; i < to; i++) {
     for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 8) {
 
       for (std::size_t z{0}; z < LBM_CONSTANTS::LATTICE_COUNT; z++) {
@@ -215,7 +221,8 @@ void LBM::update(bool k) {
       }
     }
   }
-  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+  sync_barrier.arrive_and_wait();
+  for (std::size_t i{from}; i < to; i++) {
     for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j += 8) {
       __m256i pos_x =
           _mm256_add_epi32(_mm256_set1_epi32(j + LBM_CONSTANTS::WIDTH),
@@ -288,4 +295,6 @@ void LBM::update(bool k) {
       }
     }
   }
+
+  sync_barrier.arrive_and_wait();
 }

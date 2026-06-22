@@ -9,8 +9,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(LbmLib "src/lbm.cpp" "src/benchmark_simulation.cpp"
-                   "src/render_simulation.cpp" "src/cell.cpp")
+add_library(
+  LbmLib "src/lbm.cpp" "src/benchmark_simulation.cpp"
+         "src/render_simulation.cpp" "src/cell.cpp" "src/lbm_parallel.cpp")
 
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
@@ -21,8 +22,10 @@ target_include_directories(glad PUBLIC "frameworks/glad/include")
 target_include_directories(LbmLib PUBLIC "include/")
 target_link_libraries(LbmLib PRIVATE glfw glad OpenGL::GL)
 
-target_compile_options(LbmLib PRIVATE -march=native -fopt-info-vec
-                                      -fopt-info-vec-missed)
+# target_compile_options(LbmLib PRIVATE -march=native -fopt-info-vec
+# -fopt-info-vec-missed)
+
+target_compile_options(LbmLib PRIVATE -march=native)
 add_executable(LBMSim "src/main.cpp")
 
 target_link_libraries(LBMSim PRIVATE LbmLib)

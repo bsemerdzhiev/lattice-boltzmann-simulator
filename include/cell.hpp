@@ -1,7 +1,6 @@
 #pragma once
 
 #include "lbm_c.hpp"
-#include "math_util.hpp"
 #include <array>
 
 template <typename T>
