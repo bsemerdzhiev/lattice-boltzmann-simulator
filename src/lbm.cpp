@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <immintrin.h>
 
+constexpr bool KARMAN_VORTEX = true;
+
 void LBM::initialize() {
   for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
     for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
@@ -51,15 +53,22 @@ void LBM::initialize() {
   //   Cell::blockade[LBM_CONSTANTS::HEIGHT - 1][i] = 1;
   // }
 
-  Vect<float> circle_coord{LBM_CONSTANTS::WIDTH / 5.f,
-                           LBM_CONSTANTS::HEIGHT / 2.f};
+  if constexpr (KARMAN_VORTEX) {
+    Vect<float> circle_coord{LBM_CONSTANTS::WIDTH / 5.f,
+                             LBM_CONSTANTS::HEIGHT / 2.f};
 
-  for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
-    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
-      if (circle_coord.euclid_dist(Vect<float>{1.f * j, 1.f * i}) <
-          LBM_CONSTANTS::CYLINDER_RADIUS) {
-        Cell::blockade[i][j] = 1;
+    for (std::size_t i{0}; i < LBM_CONSTANTS::HEIGHT; i++) {
+      for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
+        if (circle_coord.euclid_dist(Vect<float>{1.f * j, 1.f * i}) <
+            LBM_CONSTANTS::CYLINDER_RADIUS) {
+          Cell::blockade[i][j] = 1;
+        }
       }
+    }
+  } else {
+    for (std::size_t j{0}; j < LBM_CONSTANTS::WIDTH; j++) {
+      Cell::blockade[0][j] = 1;
+      Cell::blockade[LBM_CONSTANTS::HEIGHT - 1][j] = 1;
     }
   }
 }

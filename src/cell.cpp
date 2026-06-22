@@ -1,7 +1,6 @@
 #include <cell.hpp>
 
 alignas(64) Lattice<float> Cell::density;
-// Lattice<Vect<float>> velocity;
 
 alignas(64) Lattice<float> Cell::velocity_x;
 alignas(64) Lattice<float> Cell::velocity_y;
